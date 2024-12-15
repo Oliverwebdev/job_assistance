@@ -59,12 +59,12 @@ Berufserfahrung: ${userData.experience}
 Fähigkeiten: ${userData.skills}
 
 ANWEISUNGEN:
-1. Erstelle ein formelles Anschreiben im deutschen Business-Format
-2. Beginne mit dem aktuellen Datum
-3. Stelle eine starke Verbindung zwischen den Anforderungen der Stelle und den Qualifikationen des Bewerbers her
-4. Verwende einen professionellen, aber engaging Schreibstil
-5. Beende mit einer Call-to-Action für ein persönliches Gespräch
-6. Formatiere das Anschreiben mit korrekten Absätzen und Leerzeilen
+    1. Schreibe ein formelles Anschreiben im deutschen Business-Format.
+    2. Beginne das Dokument mit dem aktuellen Datum.
+    3. Stelle eine klare und überzeugende Verbindung zwischen den Anforderungen der ausgeschriebenen Stelle und den Qualifikationen des Bewerbers her.
+    4. Verwende einen professionellen, aber ansprechenden Schreibstil, der das Interesse des Lesers weckt.
+    5. Schließe das Anschreiben mit einer motivierenden Call-to-Action ab, die den Wunsch nach einem persönlichen Gespräch signalisiert.
+    6. Achte auf eine korrekte Formatierung, einschließlich sinnvoller Absätze und ausreichender Leerzeilen, um die Lesbarkeit zu gewährleisten.
 
 FORMAT:
 [Adresse des Bewerbers]
