@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Application Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background: #cccccc;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .result {
+            white-space: pre-wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .status {
+            font-style: italic;
+            color: #555;
+        }
+        #coverLetter {
+            line-height: 1.6;
+            font-family: Arial, sans-serif;
+        }
+        .download-btn {
+            margin-top: 10px;
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container"></div>
+        <h1>Job Application Generator</h1>
+        
+        <div class="input-group">
+            <label for="jobUrl">Stellenanzeige URL:</label>
+            <input type="url" id="jobUrl" required>
+            <button onclick="analyzeJob()" id="analyzeBtn">Stellenanzeige analysieren</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="jobAnalysis" style="display: none;" class="result"></div>
+
+        <div id="userDataForm" style="display: none;">
+            <h2>Ihre Daten</h2>
+            <div class="input-group">
+                <label for="userName">Name:</label>
+                <input type="text" id="userName" required oninput="checkFormCompletion()">
+            </div>
+            <div class="input-group">
+                <label for="email">E-Mail:</label>
+                <input type="email" id="email" required oninput="checkFormCompletion()">
+            </div>
+            <div class="input-group">
+                <label for="address">Anschrift:</label>
+                <textarea id="address" rows="2" required oninput="checkFormCompletion()"></textarea>
+            </div>
+            <div class="input-group">
+                <label for="phone">Telefon:</label>
+                <input type="tel" id="phone" required oninput="checkFormCompletion()">
+            </div>
+            <div class="input-group">
+                <label for="qualifications">Qualifikationen:</label>
+                <textarea id="qualifications" rows="3" required placeholder="z.B. Ausbildung, Studium, Zertifizierungen" oninput="checkFormCompletion()"></textarea>
+            </div>
+            <div class="input-group">
+                <label for="experience">Berufserfahrung:</label>
+                <textarea id="experience" rows="3" required placeholder="z.B. relevante Positionen, Projekte, Erfolge" oninput="checkFormCompletion()"></textarea>
+            </div>
+            <div class="input-group">
+                <label for="skills">Fähigkeiten:</label>
+                <textarea id="skills" rows="3" required placeholder="z.B. technische Kenntnisse, Soft Skills, Sprachen" oninput="checkFormCompletion()"></textarea>
+            </div>
+            <button onclick="generateLetter()" id="generateBtn" disabled>Anschreiben generieren</button>
+        </div>
+
+        <div id="coverLetter" style="display: none;" class="result"></div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        let jobData = null;
+
+        async function updateStatus(message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+        }
+
+        async function analyzeJob() {
+            const url = document.getElementById('jobUrl').value;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const error = document.getElementById('error');
+            
+            if (!url) {
+                error.textContent = 'Bitte geben Sie eine URL ein';
+                return;
+            }
+
+            try {
+                analyzeBtn.disabled = true;
+                error.textContent = '';
+                await updateStatus('Analyse der Stellenanzeige läuft...');
+                
+                const response = await axios.post('http://localhost:3000/api/scrape', { url });
+                jobData = response.data.jobDetails;
+                
+                const analysisDiv = document.getElementById('jobAnalysis');
+                analysisDiv.innerHTML = `
+                    <h3>Stellendetails:</h3>
+                    <p><strong>Titel:</strong> ${jobData.title}</p>
+                    <p><strong>Unternehmen:</strong> ${jobData.company}</p>
+                    <p><strong>Standort:</strong> ${jobData.location}</p>
+                    <p><strong>Beschreibung:</strong></p>
+                    <div>${jobData.description}</div>
+                `;
+                analysisDiv.style.display = 'block';
+                
+                document.getElementById('userDataForm').style.display = 'block';
+                await updateStatus('Analyse abgeschlossen. Bitte geben Sie Ihre Daten ein.');
+            } catch (err) {
+                error.textContent = 'Fehler bei der Analyse: ' + (err.response?.data?.message || err.message);
+                await updateStatus('Analyse fehlgeschlagen.');
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        async function generateLetter() {
+            const generateBtn = document.getElementById('generateBtn');
+            const error = document.getElementById('error');
+            
+            if (!jobData) {
+                error.textContent = 'Bitte analysieren Sie zuerst eine Stellenanzeige';
+                return;
+            }
+
+            const userData = {
+                name: document.getElementById('userName').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value,
+                qualifications: document.getElementById('qualifications').value,
+                experience: document.getElementById('experience').value,
+                skills: document.getElementById('skills').value
+            };
+
+            // Validierung aller Felder
+            for (const [key, value] of Object.entries(userData)) {
+                if (!value.trim()) {
+                    error.textContent = 'Bitte füllen Sie alle Felder aus';
+                    return;
+                }
+            }
+
+            try {
+                generateBtn.disabled = true;
+                error.textContent = '';
+                await updateStatus('Anschreiben wird generiert...');
+
+                const response = await axios.post('http://localhost:3000/api/generate-letter', {
+                    jobData: jobData,
+                    userData: userData
+                });
+
+                const letterDiv = document.getElementById('coverLetter');
+                letterDiv.textContent = response.data.coverLetter;
+                letterDiv.style.display = 'block';
+                
+                // Download-Button hinzufügen
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Als Text-Datei herunterladen';
+                downloadBtn.className = 'download-btn';
+                downloadBtn.onclick = () => downloadLetter(response.data.coverLetter);
+                letterDiv.after(downloadBtn);
+                
+                await updateStatus('Anschreiben erfolgreich generiert.');
+            } catch (err) {
+                error.textContent = 'Fehler bei der Generierung: ' + (err.response?.data?.message || err.message);
+                await updateStatus('Generierung fehlgeschlagen.');
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        function downloadLetter(content) {
+            const element = document.createElement('a');
+            const file = new Blob([content], {type: 'text/plain'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'Anschreiben.txt';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function checkFormCompletion() {
+            const generateBtn = document.getElementById('generateBtn');
+            const requiredFields = document.querySelectorAll('#userDataForm input[required], #userDataForm textarea[required]');
+            let allFilled = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    allFilled = false;
+                }
+            });
+            
+            generateBtn.disabled = !allFilled;
+        }
+    </script>
+</body>
+</html>
