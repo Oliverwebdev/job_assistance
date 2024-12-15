@@ -39,6 +39,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-right: 10px;
         }
         button:disabled {
             background: #cccccc;
@@ -65,61 +66,168 @@
             margin-top: 10px;
             background: #28a745;
         }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .hidden {
+            display: none;
+        }
+        .user-data-preview {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .edit-btn {
+            background: #6c757d;
+        }
     </style>
 </head>
 <body>
-    <div class="container"></div>
+    <div class="container">
         <h1>Job Application Generator</h1>
         
-        <div class="input-group">
-            <label for="jobUrl">Stellenanzeige URL:</label>
-            <input type="url" id="jobUrl" required>
-            <button onclick="analyzeJob()" id="analyzeBtn">Stellenanzeige analysieren</button>
+        <!-- User Data Section -->
+        <div id="userDataSection" class="section">
+            <h2>Ihre persönlichen Daten</h2>
+            <div id="userDataForm">
+                <div class="input-group">
+                    <label for="userName">Name:</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="input-group">
+                    <label for="email">E-Mail:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="input-group">
+                    <label for="address">Anschrift:</label>
+                    <textarea id="address" rows="2" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="phone">Telefon:</label>
+                    <input type="tel" id="phone" required>
+                </div>
+                <div class="input-group">
+                    <label for="qualifications">Qualifikationen:</label>
+                    <textarea id="qualifications" rows="3" required placeholder="z.B. Ausbildung, Studium, Zertifizierungen"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="experience">Berufserfahrung:</label>
+                    <textarea id="experience" rows="3" required placeholder="z.B. relevante Positionen, Projekte, Erfolge"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="skills">Fähigkeiten:</label>
+                    <textarea id="skills" rows="3" required placeholder="z.B. technische Kenntnisse, Soft Skills, Sprachen"></textarea>
+                </div>
+                <button onclick="saveUserData()" id="saveUserDataBtn">Daten speichern</button>
+            </div>
+
+            <div id="userDataPreview" class="hidden user-data-preview">
+                <h3>Ihre gespeicherten Daten</h3>
+                <div id="userDataContent"></div>
+                <button onclick="editUserData()" class="edit-btn">Daten bearbeiten</button>
+            </div>
         </div>
 
-        <div id="status" class="status"></div>
+        <!-- Job Analysis Section -->
+        <div id="jobSection" class="section hidden">
+            <h2>Stellenanzeige analysieren</h2>
+            <div class="input-group">
+                <label for="jobUrl">Stellenanzeige URL:</label>
+                <input type="url" id="jobUrl" required>
+                <button onclick="analyzeJob()" id="analyzeBtn">Stellenanzeige analysieren</button>
+            </div>
 
-        <div id="jobAnalysis" style="display: none;" class="result"></div>
-
-        <div id="userDataForm" style="display: none;">
-            <h2>Ihre Daten</h2>
-            <div class="input-group">
-                <label for="userName">Name:</label>
-                <input type="text" id="userName" required oninput="checkFormCompletion()">
-            </div>
-            <div class="input-group">
-                <label for="email">E-Mail:</label>
-                <input type="email" id="email" required oninput="checkFormCompletion()">
-            </div>
-            <div class="input-group">
-                <label for="address">Anschrift:</label>
-                <textarea id="address" rows="2" required oninput="checkFormCompletion()"></textarea>
-            </div>
-            <div class="input-group">
-                <label for="phone">Telefon:</label>
-                <input type="tel" id="phone" required oninput="checkFormCompletion()">
-            </div>
-            <div class="input-group">
-                <label for="qualifications">Qualifikationen:</label>
-                <textarea id="qualifications" rows="3" required placeholder="z.B. Ausbildung, Studium, Zertifizierungen" oninput="checkFormCompletion()"></textarea>
-            </div>
-            <div class="input-group">
-                <label for="experience">Berufserfahrung:</label>
-                <textarea id="experience" rows="3" required placeholder="z.B. relevante Positionen, Projekte, Erfolge" oninput="checkFormCompletion()"></textarea>
-            </div>
-            <div class="input-group">
-                <label for="skills">Fähigkeiten:</label>
-                <textarea id="skills" rows="3" required placeholder="z.B. technische Kenntnisse, Soft Skills, Sprachen" oninput="checkFormCompletion()"></textarea>
-            </div>
-            <button onclick="generateLetter()" id="generateBtn" disabled>Anschreiben generieren</button>
+            <div id="status" class="status"></div>
+            <div id="jobAnalysis" class="hidden result"></div>
+            
+            <button onclick="generateLetter()" id="generateBtn" class="hidden">Anschreiben generieren</button>
         </div>
 
-        <div id="coverLetter" style="display: none;" class="result"></div>
-        <div id="error" class="error"></div>
+        <!-- Results Section -->
+        <div id="resultsSection" class="section hidden">
+            <h2>Generiertes Anschreiben</h2>
+            <div id="coverLetter" class="result"></div>
+            <div id="error" class="error"></div>
+        </div>
     </div>
 
     <script>
         let jobData = null;
+        let userData = null;
+
+        // Check for saved user data on page load
+        window.onload = function() {
+            const savedData = localStorage.getItem('userData');
+            if (savedData) {
+                userData = JSON.parse(savedData);
+                showUserDataPreview();
+                document.getElementById('jobSection').classList.remove('hidden');
+            }
+        };
+
+        function showUserDataPreview() {
+            document.getElementById('userDataForm').classList.add('hidden');
+            const preview = document.getElementById('userDataPreview');
+            const content = document.getElementById('userDataContent');
+            
+            content.innerHTML = `
+                <p><strong>Name:</strong> ${userData.name}</p>
+                <p><strong>E-Mail:</strong> ${userData.email}</p>
+                <p><strong>Anschrift:</strong> ${userData.address}</p>
+                <p><strong>Telefon:</strong> ${userData.phone}</p>
+                <p><strong>Qualifikationen:</strong> ${userData.qualifications}</p>
+                <p><strong>Berufserfahrung:</strong> ${userData.experience}</p>
+                <p><strong>Fähigkeiten:</strong> ${userData.skills}</p>
+            `;
+            
+            preview.classList.remove('hidden');
+        }
+
+        function editUserData() {
+            // Fill form with existing data
+            document.getElementById('userName').value = userData.name;
+            document.getElementById('email').value = userData.email;
+            document.getElementById('address').value = userData.address;
+            document.getElementById('phone').value = userData.phone;
+            document.getElementById('qualifications').value = userData.qualifications;
+            document.getElementById('experience').value = userData.experience;
+            document.getElementById('skills').value = userData.skills;
+
+            // Show form, hide preview
+            document.getElementById('userDataForm').classList.remove('hidden');
+            document.getElementById('userDataPreview').classList.add('hidden');
+        }
+
+        function saveUserData() {
+            userData = {
+                name: document.getElementById('userName').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value,
+                qualifications: document.getElementById('qualifications').value,
+                experience: document.getElementById('experience').value,
+                skills: document.getElementById('skills').value
+            };
+
+            // Validate all fields
+            for (const [key, value] of Object.entries(userData)) {
+                if (!value.trim()) {
+                    document.getElementById('error').textContent = 'Bitte füllen Sie alle Felder aus';
+                    return;
+                }
+            }
+
+            // Save to localStorage
+            localStorage.setItem('userData', JSON.stringify(userData));
+            
+            showUserDataPreview();
+            document.getElementById('jobSection').classList.remove('hidden');
+            document.getElementById('error').textContent = '';
+        }
 
         async function updateStatus(message) {
             const statusDiv = document.getElementById('status');
@@ -153,10 +261,9 @@
                     <p><strong>Beschreibung:</strong></p>
                     <div>${jobData.description}</div>
                 `;
-                analysisDiv.style.display = 'block';
-                
-                document.getElementById('userDataForm').style.display = 'block';
-                await updateStatus('Analyse abgeschlossen. Bitte geben Sie Ihre Daten ein.');
+                analysisDiv.classList.remove('hidden');
+                document.getElementById('generateBtn').classList.remove('hidden');
+                await updateStatus('Analyse abgeschlossen. Sie können nun ein Anschreiben generieren.');
             } catch (err) {
                 error.textContent = 'Fehler bei der Analyse: ' + (err.response?.data?.message || err.message);
                 await updateStatus('Analyse fehlgeschlagen.');
@@ -169,27 +276,9 @@
             const generateBtn = document.getElementById('generateBtn');
             const error = document.getElementById('error');
             
-            if (!jobData) {
-                error.textContent = 'Bitte analysieren Sie zuerst eine Stellenanzeige';
+            if (!jobData || !userData) {
+                error.textContent = 'Bitte füllen Sie erst Ihre persönlichen Daten aus und analysieren Sie eine Stellenanzeige';
                 return;
-            }
-
-            const userData = {
-                name: document.getElementById('userName').value,
-                email: document.getElementById('email').value,
-                address: document.getElementById('address').value,
-                phone: document.getElementById('phone').value,
-                qualifications: document.getElementById('qualifications').value,
-                experience: document.getElementById('experience').value,
-                skills: document.getElementById('skills').value
-            };
-
-            // Validierung aller Felder
-            for (const [key, value] of Object.entries(userData)) {
-                if (!value.trim()) {
-                    error.textContent = 'Bitte füllen Sie alle Felder aus';
-                    return;
-                }
             }
 
             try {
@@ -202,16 +291,18 @@
                     userData: userData
                 });
 
+                document.getElementById('resultsSection').classList.remove('hidden');
                 const letterDiv = document.getElementById('coverLetter');
                 letterDiv.textContent = response.data.coverLetter;
-                letterDiv.style.display = 'block';
                 
-                // Download-Button hinzufügen
-                const downloadBtn = document.createElement('button');
-                downloadBtn.textContent = 'Als Text-Datei herunterladen';
-                downloadBtn.className = 'download-btn';
-                downloadBtn.onclick = () => downloadLetter(response.data.coverLetter);
-                letterDiv.after(downloadBtn);
+                // Add download button if not already present
+                if (!document.querySelector('.download-btn')) {
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.textContent = 'Als Text-Datei herunterladen';
+                    downloadBtn.className = 'download-btn';
+                    downloadBtn.onclick = () => downloadLetter(response.data.coverLetter);
+                    letterDiv.after(downloadBtn);
+                }
                 
                 await updateStatus('Anschreiben erfolgreich generiert.');
             } catch (err) {
@@ -230,20 +321,6 @@
             document.body.appendChild(element);
             element.click();
             document.body.removeChild(element);
-        }
-
-        function checkFormCompletion() {
-            const generateBtn = document.getElementById('generateBtn');
-            const requiredFields = document.querySelectorAll('#userDataForm input[required], #userDataForm textarea[required]');
-            let allFilled = true;
-            
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    allFilled = false;
-                }
-            });
-            
-            generateBtn.disabled = !allFilled;
         }
     </script>
 </body>
